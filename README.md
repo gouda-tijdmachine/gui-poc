@@ -1,6 +1,8 @@
 # Proof-of-concept GUI
 Proof-of-concept van een GUI voor de [Gouda Tijdmachine](https://www.goudatijdmachine.nl/), gebaseerd op de brainstorms van het GTM kernteam.
 
+![Social](assets/img/social.png)
+
 # Eisen
 - Weergave van geo-temporele data op de kaart
 - Open source - herbruikbaar voor andere tijdmachines
