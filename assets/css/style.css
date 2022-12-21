@@ -1,0 +1,371 @@
+:root {
+    --rood: #d12929;
+    --blauw: #3991b1;
+    --wit: #ffffff;
+    --lichtgrijs: #ebebeb;
+    --bruin: #543b3b;
+    --bijnazwart: #111111;
+    --grijs: #666666;
+    --lichtgroen: #dff0d8;
+    --lichtrood: #f2dede;
+    --lichtblauw: #edf8fc;
+}
+
+body {
+    font-family: arial;
+    margin: 0;
+    padding: 0;
+}
+
+/* periodSliderLine */
+
+#map {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    z-index: 0;
+}
+
+#periodSliderWrapper {
+    bottom: 0vh;
+    left: 1vw;
+    width: 98vw;
+    height: 4vh;
+    padding-top: 3vh;
+    box-shadow: 2px -2px 5px #999;
+}
+
+#periodSliderMin {
+    float: left;
+    text-align: right
+}
+
+#periodSliderMax {
+    float: right;
+    text-align: left
+}
+
+#periodSliderMin,
+#periodSliderMax {
+    width: max(40px, 3.5vw);
+    display: inline-block;
+    line-height: 0.9;
+    color: var(--wit);
+}
+
+#periodSliderLine {
+    width: 88vw;
+    background: var(--grijs);
+    margin-left: 5vw;
+}
+
+#periodSliderLine .range-slider__range {
+    background: var(--rood);
+    transition: height .3s;
+    cursor: grab;
+}
+
+#periodSliderLine .range-slider__thumb {
+    background: var(--rood);
+    transition: transform .3s;
+    color: white;
+    text-align: center;
+    line-height: 1.5em;
+    font-size: 1em;
+    border: 5px solid white;
+    cursor: grab;
+}
+
+#periodSliderLine .range-slider__thumb[data-active] {
+    transform: translate(-50%, -50%) scale(1.25);
+}
+
+#periodSliderLine .range-slider__range[data-active] {
+    height: 16px;
+}
+
+.range-slider .range-slider__thumb {
+    width: 40px;
+    border-radius: 25%;
+}
+
+.range-slider {
+    height: 12px;
+}
+
+/* panels */
+
+#timeBoundMaps,
+#timeBoundInfo,
+#placeTimeBoundInfo,
+#periodSliderWrapper {
+    position: absolute;
+    background-color: var(--blauw);
+    z-index: 5;
+}
+
+#timeBoundInfo {
+    top: 0;
+    left: 1vw;
+    width: 32vw;
+    box-shadow: 2px 2px 5px #999;
+}
+
+#placeTimeBoundInfo {
+    top: 0;
+    left: calc(50% - 15vw);
+    width: 30vw;
+    box-shadow: 2px 2px 5px #999;
+}
+
+#timeBoundMaps {
+    top: 0;
+    right: 1vw;
+    width: 32vw;
+    box-shadow: 2px 2px 5px #999;
+}
+
+
+#timeBoundMapsContent {
+    height: 75vh;
+    background-color: var(--blauw);
+    color: var(--wit);
+    padding-left: 2vh;
+}
+
+#timeBoundMaps h1,
+#timeBoundInfoContent h1 {
+    color: var(--wit);
+    font-size: 1.5em;
+    padding: 0.5em 1.5em;
+}
+
+#timeBoundInfoSelect {
+    height: 5vh;
+}
+
+#timeBoundInfoContent {
+    height: 72.2vh;
+    background-color: var(--blauw);
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+#placeTimeBoundInfoContent p {
+    color: var(--wit);
+}
+
+#placeTimeBoundInfoContent {
+    height: 75vh;
+    padding-left: 2vh;
+}
+
+#infoSelect {
+    width: 26vw;
+    margin-left: 4vw;
+    padding: 4px;
+    color: var(--bijnazwart);
+    border: 1px solid var(--blauw);
+    font-size: 1.1em;
+    margin-bottom: 1em;
+    border-radius: 0;
+}
+
+.layerYear {
+    background-color: var(--rood);
+    color: white;
+    border-radius: 3px;
+    padding: 2px 4px;
+    margin-left: 1em;
+    font-size: 0.75em;
+}
+
+select option:disabled,
+.disabledText {
+    color: var(--lichtgrijs);
+    filter: brightness(80%);
+}
+
+.disabledText .layerYear {
+    background-color: var(--lichtrood);
+    color: var(--grijs);
+}
+
+.hideContent {
+    display: none;
+}
+
+.showContent {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    width: 100%;
+    height: 100vh;
+    background-color: var(--wit);
+    overflow: hidden;
+}
+
+#pidContentHeader img {
+    height: 3vh;
+    width: 3vh;
+    vertical-align: text-bottom;
+    margin: 0.5vh 0 0 1vw;
+}
+
+#pidContentHeader {
+    background-color: var(--blauw);
+    height: 4vh;
+    width: 100vw;
+}
+
+.pidContentClose {
+    float: right;
+    color: white;
+    font-size: 3.9vh;
+    margin: -0.5vh 0.5vw 0 0;
+    text-decoration: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+#pidContentFrame iframe {
+    height: 96vh;
+    width: 100vw;
+}
+
+.pidLink {
+    color: var(--wit);
+    text-decoration: none;
+    border-bottom: 1px solid var(--lichtgrijs);
+    font-size: 0.8em;
+}
+
+.pidLink:hover {
+    border-bottom: 1px solid var(--blauw);
+}
+
+#placeTimeBoundInfoContent ul,
+#timeBoundMapsContent ul {
+    line-height: 1.75em;
+    color: var(--wit);
+}
+
+/* timeline css */
+
+#timeline {
+    position: relative;
+    display: table;
+    height: 100%;
+    margin-left: 1vw;
+}
+
+#timeline div:after {
+    content: "";
+    width: 2px;
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0rem;
+    left: 50px;
+    z-index: 1;
+    background: var(--wit);
+}
+
+#timeline h3 {
+    top: 5rem;
+    display: inline;
+    background-color: var(--rood);
+    color: white;
+    border-radius: 3px;
+    padding: 2px 4px;
+    margin-left: 0.5em;
+    font-size: 0.75em;
+    margin: 1px;
+}
+
+#timeline section.year {
+    position: relative;
+}
+
+#timeline section.year:first-child section {
+    margin-top: -1.3em;
+    padding-bottom: 0px;
+}
+
+#timeline section.year section {
+    position: relative;
+    margin-bottom: 2em;
+}
+
+#timeline section.year section ul {
+    list-style-type: none;
+    padding: 0 0 0 65px;
+    margin: -1.35rem 0 1em;
+    max-width: 32rem;
+    font-size: 1em;
+}
+
+#timeline section.year section ul:last-child {
+    margin-bottom: 0;
+}
+
+#timeline section.year section ul:first-of-type:after {
+    content: "";
+    width: 10px;
+    height: 10px;
+    background: var(--blauw);
+    border: 2px solid var(--wit);
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    -ms-border-radius: 50%;
+    border-radius: 50%;
+    position: absolute;
+    left: 44px;
+    top: 7px;
+    z-index: 2;
+}
+
+#timeline section.year section ul li {
+    padding-top: 0.3rem
+}
+
+#timeline section.year section ul li:not(:first-child) {
+    margin-top: 0.5rem;
+}
+
+/* collapsing divs */
+
+.collapse-trigger::after {
+    color: var(--wit);
+    content: "▼";
+    float: left;
+    padding-right: 5px;
+}
+
+.collapse-trigger.active::after {
+    content: "▲";
+}
+
+.collapse-trigger {
+    padding: .5vh 2vh;
+    font-size: 1.2em;
+    color: var(--wit);
+    cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    height: 3vh;
+}
+
+.collapsible {
+    display: none;
+}
+
+.collapse-trigger.active+.collapsible {
+    display: block;
+}
+
+/* leaflet */
+
+.leaflet-contai
