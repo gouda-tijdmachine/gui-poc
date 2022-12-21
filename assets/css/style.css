@@ -368,4 +368,6 @@ select option:disabled,
 
 /* leaflet */
 
-.leaflet-contai
+.leaflet-top .leaflet-control {
+    margin-top: 43px;
+}
