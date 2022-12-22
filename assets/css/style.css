@@ -365,9 +365,3 @@ select option:disabled,
 .collapse-trigger.active+.collapsible {
     display: block;
 }
-
-/* leaflet */
-
-.leaflet-top {
-    top: 30px;
-}
