@@ -30,8 +30,8 @@ body {
 
 #periodSliderWrapper {
     bottom: 0vh;
-    left: 1vw;
-    width: 98vw;
+    left: 4vw;
+    width: 92vw;
     height: 4vh;
     padding-top: 3vh;
     box-shadow: 2px -2px 5px #999;
@@ -56,7 +56,7 @@ body {
 }
 
 #periodSliderLine {
-    width: 88vw;
+    width: 82vw;
     background: var(--grijs);
     margin-left: 5vw;
 }
