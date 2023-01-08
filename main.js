@@ -171,7 +171,7 @@ function updateTimeBoundMapsContent() {	// Kaarten
 		htmlContent += '</p>'
 	});
 
-	htmlContent += '<br><p><input onclick="showMap(\'geen\')" name="tbMap" type="radio"';
+	htmlContent += '<p><input onclick="showMap(\'geen\')" name="tbMap" type="radio"';
 	if (currentLayer == 'geen') { htmlContent += ' checked="checked"'; }
 	htmlContent += '>&nbsp;Geen<p>';
 	document.getElementById('timeBoundMapsContent').innerHTML = htmlContent;
@@ -229,11 +229,9 @@ function getTimeBoundInfo() {
 			OPTIONAL {
 				$pid <https://www.goudatijdmachine.nl/def#rang> ?rang
 			}
-			FILTER(CONTAINS(STR(?pid),"api")) 
+			FILTER(CONTAINS(STR(?pid),"ark")) 
 		} GROUP BY ?pid ?title ?yearFrom ?yearUntil ?rang ORDER BY ?yearFrom ?rang
 	`;
-
-	console.log(sparql_query);
 
 	var xhr2 = new XMLHttpRequest();
 	xhr2.open("GET", sparql_endpoint + encodeURIComponent(sparql_query));

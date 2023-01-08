@@ -108,8 +108,8 @@ body {
 
 #timeBoundInfo {
     top: 0;
-    left: 1vw;
-    width: 32vw;
+    left: 4vw;
+    width: 30vw;
     box-shadow: 2px 2px 5px #999;
 }
 
@@ -122,8 +122,8 @@ body {
 
 #timeBoundMaps {
     top: 0;
-    right: 1vw;
-    width: 32vw;
+    right: 4vw;
+    width: 30vw;
     box-shadow: 2px 2px 5px #999;
 }
 
@@ -252,6 +252,21 @@ select option:disabled,
     line-height: 1.75em;
     color: var(--wit);
 }
+
+
+
+#logo {
+    position:absolute;
+    left:1vw;
+    top:3px;
+    z-index:10
+}
+
+#logo > img { 
+    height:3vh;
+    width:3vh;
+}
+
 
 /* timeline css */
 
