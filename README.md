@@ -4,7 +4,7 @@ Proof-of-concept van een GUI voor de [Gouda Tijdmachine](https://www.goudatijdma
 ![Social](assets/img/social.png)
 
 # Eisen
-- Weergave van geo-temporele data op de kaart
+- Responsive weergave van geo-temporele data op de kaart
 - Open source - herbruikbaar voor andere tijdmachines
 - Vue.js (is huidige PoC nog niet)
 
