@@ -221,10 +221,10 @@ function getTimeBoundInfo() {
 	var sparql_query = `
 		SELECT * WHERE {
 			?pid <http://omeka.org/s/vocabs/o#item_set> <${timeBoundInformation[selectedInfo].itemset}> ;
-				<http://purl.org/dc/terms/title> ?title ;
-				<http://semanticweb.cs.vu.nl/2009/11/sem/hasEarliestBeginTimeStamp> ?yearFrom .
+				<https://schema.org/name> ?title ;
+				<https://schema.org/startDate> ?yearFrom .
 			OPTIONAL {
-				?pid <http://semanticweb.cs.vu.nl/2009/11/sem/hasLatestEndTimeStamp> ?yearUntil .
+				?pid <https://schema.org/endDate> ?yearUntil .
 			} 
 			OPTIONAL {
 				$pid <https://www.goudatijdmachine.nl/def#rang> ?rang
