@@ -1,12 +1,11 @@
 # Proof-of-concept GUI
 Proof-of-concept van een GUI voor de [Gouda Tijdmachine](https://www.goudatijdmachine.nl/), gebaseerd op de brainstorms van het GTM kernteam.
 
-![Social](assets/img/social.png)
-
 # Eisen
 - Responsive weergave van geo-temporele data op de kaart
 - Open source - herbruikbaar voor andere tijdmachines
-- Vue.js (is huidige PoC nog niet)
+- Javascript framework als Vue.js of React (is huidige PoC nog niet)
+- Presentatie van data die beschikbaar is via API
 
 # Weergave van geo-temporele data op de kaart
 
@@ -23,12 +22,11 @@ Via het 'Kaarten in de tijd' paneel kan een kaart als ondergrond worden gekozen.
 # Bronnen en componenten
 
 ## Goude Timemachine bronnen 
-Bronnen beschreven op de [Gouda Tijdmachine data gebruik](https://www.goudatijdmachine.nl/data/datasets/sparql-endpoint) pagina:
-- SPARQL endpoint (GraphDB)
+Bronnen beschreven op de [Gouda Tijdmachine data gebruik](https://www.goudatijdmachine.nl/omeka/s/data/page/usageInfo) pagina zijn onder meer:
+- [SPARQL endpoint](https://www.goudatijdmachine.nl/data/datasets/sparql-endpoint) (GraphDB)
 - WMS (Geoserver)
 - IIIF/Image server (Omeka S)
 
-## Gebruikte componenten
-
+## Gebruikte componenten in PoC
 - [n3r4zzurr0 / range-slider-input](https://github.com/n3r4zzurr0/range-slider-input)
 - [Leaflet](https://leafletjs.com/)
