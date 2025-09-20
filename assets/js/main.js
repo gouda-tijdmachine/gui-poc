@@ -1,6 +1,7 @@
 var currentLayer = 'geen';
 var straten = [];
 var plekken = [];
+var sparql_endpoint = 'https://qlever.coret.org/gtm?query=';
 
 const options = { min: 1300, max: new Date().getFullYear(), step: 1, value: [1800, 1840], onInput: changeRange, onThumbDragEnd: endRangeSliderDrag, onRangeDragEnd: endRangeSliderDrag };
 var minYear = options.value[0];
@@ -69,13 +70,13 @@ function updateTimeBoundMapInfo() {
 
 function updateTimeBoundInfoContent() { // Informatie
 
-	var burgemeesterInfo = [];
+	var arrInfo = [];
 
-	if (burgemeesters.length == 0) { return; }
+	if (timeboundinfo.length == 0) { return; }
 
-	burgemeesters.forEach((layer) => {
+	timeboundinfo.forEach((layer) => {
 		if (layer.yearFrom <= maxYear && minYear <= layer.yearUntil) {
-			burgemeesterInfo.push(layer);
+			arrInfo.push(layer);
 		}
 	});
 
@@ -83,8 +84,8 @@ function updateTimeBoundInfoContent() { // Informatie
 
 	years = [];
 
-	if (burgemeesterInfo.length > 0) {
-		burgemeesterInfo.forEach((layer) => {
+	if (arrInfo.length > 0) {
+		arrInfo.forEach((layer) => {
 			for (year = layer.yearFrom; year <= layer.yearUntil; year++) {
 				var li = '<li><a class="pidLink" href="javascript:pidLink(\'' + layer.pid + '\')">' + layer.title + '</a></li>';
 				if (typeof years[year] == 'undefined') {
@@ -106,27 +107,30 @@ function updateTimeBoundInfoContent() { // Informatie
 	document.getElementById('timeBoundInfoContent').innerHTML = htmlContent;
 }
 
+var selectedInfo='burgemeesters';
+
 function updateTimeBoundInfoHeader() {	// Informatie
 
-	var htmlContent = '';
+	select=document.getElementById('infoSelect');
 
-	timeBoundInformation.forEach((layer) => {
-		if (layer.yearFrom <= maxYear && minYear <= layer.yearUntil) {
-			htmlContent += '<option>';
+	while (select.options.length > 0) {                
+        select.remove(0);
+    }
+
+	for (var id in timeBoundInformation) {
+		layer=timeBoundInformation[id];
+
+		var el = document.createElement("option");
+		el.value = id;
+		if (layer.yearFrom != layer.yearUntil) {
+			el.textContent=layer.title+' (' + layer.yearFrom + '-' + layer.yearUntil + ')';
 		} else {
-			htmlContent += '<option disabled>';
+			el.textContent=layer.title+' (' + layer.yearFrom + ')';
 		}
-		htmlContent += layer.title;
-		if (layer.yearFrom == layer.yearUntil) {
-			htmlContent += ' (' + layer.yearFrom + ')';
-		} else {
-			htmlContent += ' (' + layer.yearFrom + '-' + layer.yearUntil + ')';
-		}
-		htmlContent += '</option>'
-
-	});
-
-	document.getElementById('infoSelect').innerHTML = htmlContent;
+		el.disabled=(layer.yearFrom > maxYear || minYear > layer.yearUntil);
+		el.selected=(id==selectedInfo);
+		select.appendChild(el);
+	};
 }
 
 function updatePlaceTimeBoundInfoContent() { // Plekken in de tijd
@@ -148,40 +152,28 @@ function updateTimeBoundMapsContent() {	// Kaarten
 	georeferencedMaps.forEach((layer) => {
 		htmlContent += '<p>';
 		if (layer.yearFrom <= maxYear && minYear <= layer.yearUntil) {
-			if (layer.map == currentLayer) {
-				htmlContent += '<input onclick="showMap(\'' + layer.map + '\')" name="tbMap" checked="checked" type="radio">&nbsp;' + layer.title;
-			} else {
-				htmlContent += '<input onclick="showMap(\'' + layer.map + '\')" name="tbMap" type="radio">&nbsp;' + layer.title;
-			}
-			if (layer.yearFrom == layer.yearUntil) {
-				htmlContent += '<span class="layerYear">' + layer.yearFrom + '</span>';
-			} else {
-				htmlContent += '<span class="layerYear">' + layer.yearFrom + '-' + layer.yearUntil + '</span>';
-			}
-
-		} else {
-			if (layer.map == currentLayer) {
-				htmlContent += '<input onclick="showMap(\'' + layer.map + '\')" name="tbMap" checked="checked" type="radio">&nbsp;<span class="disabledText">' + layer.title;
-			} else {
-				htmlContent += '<input onclick="showMap(\'' + layer.map + '\')" name="tbMap" type="radio">&nbsp;<span class="disabledText">' + layer.title;
-			}
-			if (layer.yearFrom == layer.yearUntil) {
-				htmlContent += '<span class="layerYear">' + layer.yearFrom + '</span>';
-			} else {
-				htmlContent += '<span class="layerYear">' + layer.yearFrom + '-' + layer.yearUntil + '</span>';
-			}
+			htmlContent += '<input onclick="showMap(\'' + layer.map + '\')" name="tbMap" ';
+			if (layer.map == currentLayer) { htmlContent += 'checked="checked" '; }
+			htmlContent += 'type="radio">&nbsp;' + layer.title;
+			
+			htmlContent += '<span class="layerYear">' + layer.yearFrom;
+			if (layer.yearFrom != layer.yearUntil) { htmlContent += '-' + layer.yearUntil; }
 			htmlContent += '</span>';
+		} else {
+			htmlContent += '<input onclick="showMap(\'' + layer.map + '\')" name="tbMap" ';
+			if (layer.map == currentLayer) { htmlContent += 'checked="checked" '; }
+			htmlContent += 'type="radio">&nbsp;<span class="disabledText">' + layer.title;
+
+			htmlContent += '<span class="layerYear">' + layer.yearFrom;
+			if (layer.yearFrom != layer.yearUntil) { htmlContent += '-' + layer.yearUntil; }
+			htmlContent += '</span></span>';
 		}
-
-		htmlContent += '<p>'
-
+		htmlContent += '</p>'
 	});
 
-	if (currentLayer == 'geen') {
-		htmlContent += '<br><p><input onclick="showMap(\'geen\')" name="tbMap" checked="checked" type="radio">&nbsp;Geen<p>'
-	} else {
-		htmlContent += '<br><p><input onclick="showMap(\'geen\')" name="tbMap" type="radio">&nbsp;Geen<p>'
-	}
+	htmlContent += '<p><input onclick="showMap(\'geen\')" name="tbMap" type="radio"';
+	if (currentLayer == 'geen') { htmlContent += ' checked="checked"'; }
+	htmlContent += '>&nbsp;Geen<p>';
 	document.getElementById('timeBoundMapsContent').innerHTML = htmlContent;
 }
 
@@ -219,36 +211,58 @@ document.getElementById('periodSliderMin').innerHTML = options.min;
 document.getElementById('periodSliderMax').innerHTML = options.max;
 
 
-var burgemeesters = [];
+var timeboundinfo=[];
 
-var sparql_geojson_items = 'PREFIX gtm: <https://www.goudatijdmachine.nl/def#> PREFIX sem: <http://semanticweb.cs.vu.nl/2009/11/sem/> PREFIX omeka: <http://omeka.org/s/vocabs/o#> PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> SELECT ?pid ?title ?yearFrom ?yearUntil WHERE {     ?pid omeka:item_set <https://n2t.net/ark:/60537/bPoosY> . ?pid sem:hasActor ?actor . ?actor <http://purl.org/dc/terms/title> ?title .     ?pid sem:hasEarliestBeginTimeStamp ?yearFrom . OPTIONAL { ?pid sem:hasLatestEndTimeStamp ?yearUntil } . FILTER(CONTAINS(STR(?pid),"ark")) } GROUP BY ?pid ?title ?yearFrom ?yearUntil ORDER BY ?yearFrom';
 
-var url = 'https://www.goudatijdmachine.nl/sparql/repositories/gtm?query=' + encodeURIComponent(sparql_geojson_items);
-var xhr2 = new XMLHttpRequest();
-xhr2.open("GET", url);
-xhr2.setRequestHeader("Accept", "application/json");
+function getTimeBoundInfo() {
 
-xhr2.onreadystatechange = function () {
-	if (xhr2.readyState === 4) {
-		if (xhr2.status === 200) {
-			sparqlresult = JSON.parse(xhr2.responseText);
-			for (var prop in sparqlresult.results.bindings) {
-				var burgemeester = {
-					"pid": sparqlresult.results.bindings[prop].pid.value,
-					"title": sparqlresult.results.bindings[prop].title.value,
-					"yearFrom": sparqlresult.results.bindings[prop].yearFrom.value,
-					"yearUntil": ((typeof sparqlresult.results.bindings[prop].yearUntil !== 'undefined') ? sparqlresult.results.bindings[prop].yearUntil.value : 2022)
-				};
-				burgemeesters.push(burgemeester);
+	timeboundinfo = [];
+
+	var sparql_query = `
+		SELECT * WHERE {
+			?pid <http://omeka.org/s/vocabs/o#item_set> <${timeBoundInformation[selectedInfo].itemset}> ;
+				<https://schema.org/name> ?title ;
+				<https://schema.org/startDate> ?yearFrom .
+			OPTIONAL {
+				?pid <https://schema.org/endDate> ?yearUntil .
+			} 
+			OPTIONAL {
+				$pid <https://www.goudatijdmachine.nl/def#rang> ?rang
 			}
-			updateTimeBoundInfoContent();
-		} else {
-			console.log("Call to triplestore got HTTP code " + xhr2.status);
-		}
-	}
-};
+		} 
+		#GROUP BY ?pid ?title ?yearFrom ?yearUntil ?rang 
+		ORDER BY ?yearFrom ?rang
+	`;
+	console.log(sparql_query);
+	var xhr2 = new XMLHttpRequest();
+	xhr2.open("GET", sparql_endpoint + encodeURIComponent(sparql_query));
+	xhr2.setRequestHeader("Accept", "application/json");
 
-xhr2.send();
+	xhr2.onreadystatechange = function () {
+		if (xhr2.readyState === 4) {
+			if (xhr2.status === 200) {
+				sparqlresult = JSON.parse(xhr2.responseText);
+				for (var prop in sparqlresult.results.bindings) {
+					var item = {
+						"pid": sparqlresult.results.bindings[prop].pid.value,
+						"title": sparqlresult.results.bindings[prop].title.value,
+						"yearFrom": sparqlresult.results.bindings[prop].yearFrom.value,
+						"yearUntil": ((typeof sparqlresult.results.bindings[prop].yearUntil !== 'undefined') ? sparqlresult.results.bindings[prop].yearUntil.value : 2022)
+					};
+					timeboundinfo.push(item);
+				}
+				updateTimeBoundInfoContent();
+			} else {
+				console.log("Call to triplestore got HTTP code " + xhr2.status);
+			}
+		}
+	};
+
+	xhr2.send();
+}
+
+document.getElementById('infoSelect').onchange = changeTimeBoundInfo;
+changeTimeBoundInfo();
 
 function attachCollapseTriggers() {
 	var colTriggers = document.getElementsByClassName("collapse-trigger");
@@ -262,7 +276,15 @@ function attachCollapseTriggers() {
 attachCollapseTriggers();
 
 
+function changeTimeBoundInfo() {
+	if (document.getElementById('infoSelect').value!="") {
+		console.log(document.getElementById('infoSelect').value);
+		selectedInfo=document.getElementById('infoSelect').value;
+		getTimeBoundInfo();
+	}
+}
 
+getTimeBoundInfo();
 
 function onEachFeature(feature, layer) {
 	var popupContent;
