@@ -1,182 +1,315 @@
-var currentLayer = 'geen';
-var straten = [];
-var plekken = [];
-var sparql_endpoint = 'https://qlever.coret.org/gtm?query=';
+import { map, maps, loadJSON } from './geo.js';
+import { georeferencedMaps } from '../../data/georeferencedMaps.js';
+import { placeAndTimeBoundInformation } from '../../data/placeAndTimeBoundInformation.js';
+import { timeBoundInformation } from '../../data/timeBoundInformation.js';
 
-const options = { min: 1300, max: new Date().getFullYear(), step: 1, value: [1800, 1840], onInput: changeRange, onThumbDragEnd: endRangeSliderDrag, onRangeDragEnd: endRangeSliderDrag };
-var minYear = options.value[0];
-var maxYear = options.value[1];
+const sparqlEndpoint = 'https://qlever.coret.org/gtm?query=';
 
-var defaultIcon = L.icon({ iconSize: [25, 41], iconAnchor: [12, 40], popupAnchor: [0, -26], iconUrl: 'https://www.goudatijdmachine.nl/data/files/geo/marker-icon.png', shadowUrl: 'https://www.goudatijdmachine.nl/data/files/geo/marker-shadow.png', shadowSize: [41, 41], shadowAnchor: [12, 40] });
+const defaultIcon = L.icon({ iconSize: [25, 41], iconAnchor: [12, 40], popupAnchor: [0, -26], iconUrl: 'https://www.goudatijdmachine.nl/data/files/geo/marker-icon.png', shadowUrl: 'https://www.goudatijdmachine.nl/data/files/geo/marker-shadow.png', shadowSize: [41, 41], shadowAnchor: [12, 40] });
+
+const sliderOptions = { min: 1300, max: new Date().getFullYear(), step: 1, value: [1800, 1840], onInput: changeRange, onThumbDragEnd: endRangeSliderDrag, onRangeDragEnd: endRangeSliderDrag };
+
+let currentLayer = 'geen';
+const placeLayerConfigs = new Map(placeAndTimeBoundInformation.map((layer) => [layer.title, layer]));
+const placeLayers = new Map();
+let selectedInfo = 'burgemeesters';
+let timeBoundInfoRecords = [];
+let minYear = sliderOptions.value[0];
+let maxYear = sliderOptions.value[1];
+
+const iconCache = new WeakMap();
+
+const infoSelect = document.getElementById('infoSelect');
+const timelineContainer = document.getElementById('timeBoundInfoContent');
+const placeInfoContainer = document.getElementById('placeTimeBoundInfoContent');
+const mapsContainer = document.getElementById('timeBoundMapsContent');
+const lowerLabel = document.querySelector('div[data-lower]');
+const upperLabel = document.querySelector('div[data-upper]');
+const sliderMinLabel = document.getElementById('periodSliderMin');
+const sliderMaxLabel = document.getElementById('periodSliderMax');
+
+rangeSlider(document.querySelector('#periodSliderLine'), sliderOptions);
+lowerLabel.textContent = String(minYear);
+upperLabel.textContent = String(maxYear);
+sliderMinLabel.textContent = String(sliderOptions.min);
+sliderMaxLabel.textContent = String(sliderOptions.max);
+
+showMap(currentLayer);
+attachCollapseTriggers();
+infoSelect.addEventListener('change', changeTimeBoundInfo);
+
+updatePanels();
+changeTimeBoundInfo();
+
+function changeRange(range) {
+	minYear = Number(range[0]);
+	maxYear = Number(range[1]);
+
+	lowerLabel.textContent = String(minYear);
+	upperLabel.textContent = String(maxYear);
+
+	updatePanels();
+}
 
 function endRangeSliderDrag() {
 	updateTimeBoundMapInfo();
 }
 
-
-showMap(currentLayer);
-
 function showMap(newLayer) {
-	if (currentLayer != 'geen') {
+	if (currentLayer !== 'geen' && maps[currentLayer]) {
 		maps[currentLayer].remove();
 	}
 	currentLayer = newLayer;
-	if (currentLayer != 'geen') {
+	if (currentLayer !== 'geen' && maps[currentLayer]) {
 		maps[currentLayer].addTo(map);
 	}
 }
 
-function showInfo(infoLayer) {
-	if (plekken[infoLayer].active == 1) {
-		plekken[infoLayer].geojson.remove();
-		plekken[infoLayer].active = 0;
-	} else {
-		plekken[infoLayer].geojson.addTo(map);
-		plekken[infoLayer].active = 1;
-	}
+function updateTimeBoundMapInfo() {
+	placeLayers.forEach((entry, title) => {
+		if (!entry.active || !entry.data) {
+			return;
+		}
+
+		if (entry.layer) {
+			entry.layer.remove();
+		}
+
+		const config = placeLayerConfigs.get(title);
+		if (!config) {
+			return;
+		}
+
+		entry.layer = createGeoJsonLayer(config, entry.data);
+		entry.layer.addTo(map);
+	});
 }
 
-/* periodSliderLine */
+function createGeoJsonLayer(layerConfig, data) {
+	const filter = layerConfig.strictperiod ? strictPeriodFilter : periodFilter;
+	const icon = getIcon(layerConfig.icon);
+	return L.geoJSON(data, {
+		filter,
+		onEachFeature,
+		pointToLayer: (feature, latlng) => L.marker(latlng, { icon })
+	});
+}
 
+function getLayerEntry(layerTitle) {
+	if (!placeLayers.has(layerTitle)) {
+		placeLayers.set(layerTitle, { active: false, data: null, layer: null });
+	}
+	return placeLayers.get(layerTitle);
+}
 
-function changeRange(e) {
+async function togglePlaceLayer(layerTitle) {
+	const config = placeLayerConfigs.get(layerTitle);
+	if (!config) {
+		return;
+	}
 
-	minYear = e[0];
-	maxYear = e[1];
+	const entry = getLayerEntry(layerTitle);
 
-	document.querySelector("div[data-lower]").innerHTML = minYear;
-	document.querySelector("div[data-upper]").innerHTML = maxYear;
+	if (entry.active) {
+		if (entry.layer) {
+			entry.layer.remove();
+			entry.layer = null;
+		}
+		entry.active = false;
+	} else {
+		if (!entry.data) {
+			try {
+				entry.data = await loadJSON(config.geojson);
+			} catch (error) {
+				console.error(error);
+				updatePlaceTimeBoundInfoContent();
+				return;
+			}
 
+		entry.layer = createGeoJsonLayer(config, entry.data);
+		entry.layer.addTo(map);
+		entry.active = true;
+	}
+
+	placeLayers.set(layerTitle, entry);
 	updatePanels();
 }
 
-function updateTimeBoundMapInfo() {
-	placeAndTimeBoundInformation.forEach((layer) => {
-		if (plekken[layer.title].active == 1) {
-			loadJSON(layer.geojson, function (data) {
-				map.removeLayer(plekken[layer.title].geojson);
-				if (typeof layer.strictperiod !== 'undefined') {
-					plekken[layer.title].geojson = L.geoJSON(data, { filter: strictPeriodFilter, onEachFeature: onEachFeature, pointToLayer: function (feature, latlng) { if (typeof layer.icon != 'undefined') { return L.marker(latlng, { icon: L.icon(layer.icon) }); } else { return L.marker(latlng, { icon: defaultIcon }); } } });
-				} else {
-					plekken[layer.title].geojson = L.geoJSON(data, { filter: periodFilter, onEachFeature: onEachFeature, pointToLayer: function (feature, latlng) { if (typeof layer.icon != 'undefined') { return L.marker(latlng, { icon: L.icon(layer.icon) }); } else { return L.marker(latlng, { icon: defaultIcon }); } } });
-				}
-
-				plekken[layer.title].geojson.addTo(map);
-			}, function (xhr) { console.error(xhr); });
-		}
-	});
+function getIcon(iconConfig) {
+	if (!iconConfig) {
+		return defaultIcon;
+	}
+	if (!iconCache.has(iconConfig)) {
+		iconCache.set(iconConfig, L.icon(iconConfig));
+	}
+	return iconCache.get(iconConfig);
 }
 
+function updateTimeBoundInfoContent() {
+	const relevantRecords = timeBoundInfoRecords.filter(({ yearFrom, yearUntil }) => yearFrom <= maxYear && minYear <= yearUntil);
 
-function updateTimeBoundInfoContent() { // Informatie
-
-	var arrInfo = [];
-
-	if (timeboundinfo.length == 0) { return; }
-
-	timeboundinfo.forEach((layer) => {
-		if (layer.yearFrom <= maxYear && minYear <= layer.yearUntil) {
-			arrInfo.push(layer);
-		}
-	});
-
-	var htmlContent = '';
-
-	years = [];
-
-	if (arrInfo.length > 0) {
-		arrInfo.forEach((layer) => {
-			for (year = layer.yearFrom; year <= layer.yearUntil; year++) {
-				var li = '<li><a class="pidLink" href="javascript:pidLink(\'' + layer.pid + '\')">' + layer.title + '</a></li>';
-				if (typeof years[year] == 'undefined') {
-					years[year] = li;
-				} else {
-					years[year] += li;
-				}
-			}
-		});
+	if (relevantRecords.length === 0) {
+		timelineContainer.textContent = '';
+		return;
 	}
 
-	if (years.length > 0) {
-		htmlContent += '<div id="timeline"><div>';
-		years.forEach(function callback(li, year) {
-			htmlContent += '<section class="year"><h3>' + year + '</h3><section><ul>' + li + '</ul></section></section>';
-		});
-		htmlContent += '</div></div>';
-	}
-	document.getElementById('timeBoundInfoContent').innerHTML = htmlContent;
-}
+	const years = new Map();
 
-var selectedInfo='burgemeesters';
-
-function updateTimeBoundInfoHeader() {	// Informatie
-
-	select=document.getElementById('infoSelect');
-
-	while (select.options.length > 0) {                
-        select.remove(0);
-    }
-
-	for (var id in timeBoundInformation) {
-		layer=timeBoundInformation[id];
-
-		var el = document.createElement("option");
-		el.value = id;
-		if (layer.yearFrom != layer.yearUntil) {
-			el.textContent=layer.title+' (' + layer.yearFrom + '-' + layer.yearUntil + ')';
-		} else {
-			el.textContent=layer.title+' (' + layer.yearFrom + ')';
+	relevantRecords.forEach((record) => {
+		for (let year = record.yearFrom; year <= record.yearUntil; year += 1) {
+			const items = years.get(year) || [];
+			items.push(record);
+			years.set(year, items);
 		}
-		el.disabled=(layer.yearFrom > maxYear || minYear > layer.yearUntil);
-		el.selected=(id==selectedInfo);
-		select.appendChild(el);
-	};
+	});
+
+	if (years.size === 0) {
+		timelineContainer.textContent = '';
+		return;
+	}
+
+	const timeline = document.createElement('div');
+	timeline.id = 'timeline';
+	const timelineInner = document.createElement('div');
+	timeline.appendChild(timelineInner);
+
+	const sortedYears = Array.from(years.entries()).sort((a, b) => a[0] - b[0]);
+
+	sortedYears.forEach(([year, items]) => {
+		const yearSection = document.createElement('section');
+		yearSection.className = 'year';
+
+		const heading = document.createElement('h3');
+		heading.textContent = year;
+		yearSection.appendChild(heading);
+
+		const section = document.createElement('section');
+		const list = document.createElement('ul');
+
+		items.forEach((item) => {
+			const listItem = document.createElement('li');
+			const link = document.createElement('a');
+			link.className = 'pidLink';
+			link.href = '#';
+			link.textContent = item.title;
+			link.addEventListener('click', (event) => {
+				event.preventDefault();
+				pidLink(item.pid);
+			});
+			listItem.appendChild(link);
+			list.appendChild(listItem);
+		});
+
+		section.appendChild(list);
+		yearSection.appendChild(section);
+		timelineInner.appendChild(yearSection);
+	});
+
+	timelineContainer.replaceChildren(timeline);
 }
 
-function updatePlaceTimeBoundInfoContent() { // Plekken in de tijd
-	var htmlContent = '';
+function updateTimeBoundInfoHeader() {
+	const fragment = document.createDocumentFragment();
+	let hasSelection = false;
+
+	Object.entries(timeBoundInformation).forEach(([id, layer]) => {
+		const option = document.createElement('option');
+		option.value = id;
+		option.textContent = layer.yearFrom !== layer.yearUntil ? ${layer.title} (-) : ${layer.title} ();
+		option.disabled = layer.yearFrom > maxYear || minYear > layer.yearUntil;
+		if (id === selectedInfo) {
+			option.selected = true;
+			hasSelection = true;
+		}
+		fragment.appendChild(option);
+	});
+
+	infoSelect.replaceChildren(fragment);
+
+	if (!hasSelection && infoSelect.options.length > 0) {
+		selectedInfo = infoSelect.options[0].value;
+	}
+
+	infoSelect.value = selectedInfo;
+}
+
+function formatLayerYears(layer) {
+	return layer.yearFrom !== layer.yearUntil ? `${layer.yearFrom}-${layer.yearUntil}` : `${layer.yearFrom}`;
+}
+
+
+function updatePlaceTimeBoundInfoContent() {
+	const fragment = document.createDocumentFragment();
 
 	placeAndTimeBoundInformation.forEach((layer) => {
-		htmlContent += '<p><input onclick="showInfo(\'' + layer.title + '\')" type="checkbox"';
-		if (typeof plekken[layer.title] != 'undefined' && plekken[layer.title].active > 0) {
-			htmlContent += ' checked="checked"';
-		}
-		htmlContent += '>&nbsp;' + layer.title + '</p>';
+		const wrapper = document.createElement('p');
+		const label = document.createElement('label');
+		const checkbox = document.createElement('input');
+		checkbox.type = 'checkbox';
+		checkbox.checked = Boolean(placeLayers.get(layer.title)?.active);
+		checkbox.addEventListener('change', () => {
+			togglePlaceLayer(layer.title).catch((error) => console.error(error));
+		});
+		label.appendChild(checkbox);
+		label.append(' ');
+		label.append(layer.title);
+		wrapper.appendChild(label);
+		fragment.appendChild(wrapper);
 	});
-	document.getElementById('placeTimeBoundInfoContent').innerHTML = htmlContent;
+
+	placeInfoContainer.replaceChildren(fragment);
 }
 
-function updateTimeBoundMapsContent() {	// Kaarten
-	var htmlContent = '';
+
+function updateTimeBoundMapsContent() {
+	const fragment = document.createDocumentFragment();
 
 	georeferencedMaps.forEach((layer) => {
-		htmlContent += '<p>';
-		if (layer.yearFrom <= maxYear && minYear <= layer.yearUntil) {
-			htmlContent += '<input onclick="showMap(\'' + layer.map + '\')" name="tbMap" ';
-			if (layer.map == currentLayer) { htmlContent += 'checked="checked" '; }
-			htmlContent += 'type="radio">&nbsp;' + layer.title;
-			
-			htmlContent += '<span class="layerYear">' + layer.yearFrom;
-			if (layer.yearFrom != layer.yearUntil) { htmlContent += '-' + layer.yearUntil; }
-			htmlContent += '</span>';
-		} else {
-			htmlContent += '<input onclick="showMap(\'' + layer.map + '\')" name="tbMap" ';
-			if (layer.map == currentLayer) { htmlContent += 'checked="checked" '; }
-			htmlContent += 'type="radio">&nbsp;<span class="disabledText">' + layer.title;
+		const wrapper = document.createElement('p');
+		const label = document.createElement('label');
+		const radio = document.createElement('input');
+		radio.type = 'radio';
+		radio.name = 'tbMap';
+		radio.value = layer.map;
+		radio.checked = currentLayer === layer.map;
 
-			htmlContent += '<span class="layerYear">' + layer.yearFrom;
-			if (layer.yearFrom != layer.yearUntil) { htmlContent += '-' + layer.yearUntil; }
-			htmlContent += '</span></span>';
+		const withinRange = layer.yearFrom <= maxYear && minYear <= layer.yearUntil;
+		radio.disabled = !withinRange;
+		radio.addEventListener('change', () => showMap(layer.map));
+		label.appendChild(radio);
+		label.append(' ');
+
+		const titleSpan = document.createElement('span');
+		if (!withinRange) {
+			titleSpan.classList.add('disabledText');
 		}
-		htmlContent += '</p>'
+		titleSpan.textContent = layer.title;
+		label.appendChild(titleSpan);
+		label.append(' ');
+		const yearSpan = document.createElement('span');
+		yearSpan.className = 'layerYear';
+		yearSpan.textContent = formatLayerYears(layer);
+		label.appendChild(yearSpan);
+
+		wrapper.appendChild(label);
+		fragment.appendChild(wrapper);
 	});
 
-	htmlContent += '<p><input onclick="showMap(\'geen\')" name="tbMap" type="radio"';
-	if (currentLayer == 'geen') { htmlContent += ' checked="checked"'; }
-	htmlContent += '>&nbsp;Geen<p>';
-	document.getElementById('timeBoundMapsContent').innerHTML = htmlContent;
-}
+	const noneWrapper = document.createElement('p');
+	const noneLabel = document.createElement('label');
+	const noneRadio = document.createElement('input');
+	noneRadio.type = 'radio';
+	noneRadio.name = 'tbMap';
+	noneRadio.value = 'geen';
+	noneRadio.checked = currentLayer === 'geen';
+	noneRadio.addEventListener('change', () => showMap('geen'));
+	noneLabel.appendChild(noneRadio);
+	noneLabel.append(' Geen');
+	noneWrapper.appendChild(noneLabel);
+	fragment.appendChild(noneWrapper);
 
+	mapsContainer.replaceChildren(fragment);
+}
 
 function updatePanels() {
 	updateTimeBoundInfoHeader();
@@ -186,174 +319,124 @@ function updatePanels() {
 }
 
 function pidLink(pid) {
-	var main = document.getElementById('pidContent');
-	var iframe = document.getElementById('pidContentIframe');
+	const main = document.getElementById('pidContent');
+	const iframe = document.getElementById('pidContentIframe');
 
 	iframe.src = pid;
-	main.className = "showContent";
-
+	main.className = 'showContent';
 }
 
 function pidClose() {
-	var main = document.getElementById('pidContent');
-	var iframe = document.getElementById('pidContentIframe');
+	const main = document.getElementById('pidContent');
+	const iframe = document.getElementById('pidContentIframe');
 
 	iframe.src = 'about:blank';
-	main.className = "hideContent";
+	main.className = 'hideContent';
 }
 
+window.pidLink = pidLink;
+window.pidClose = pidClose;
 
-rangeSlider(document.querySelector('#periodSliderLine'), options);
+async function changeTimeBoundInfo() {
+	if (!infoSelect.value) {
+		return;
+	}
 
-document.querySelector("div[data-lower]").innerHTML = minYear;
-document.querySelector("div[data-upper]").innerHTML = maxYear;
-document.getElementById('periodSliderMin').innerHTML = options.min;
-document.getElementById('periodSliderMax').innerHTML = options.max;
+	selectedInfo = infoSelect.value;
+	await getTimeBoundInfo();
+	updateTimeBoundInfoContent();
+}
 
+async function getTimeBoundInfo() {
+	timeBoundInfoRecords = [];
 
-var timeboundinfo=[];
+	const selection = timeBoundInformation[selectedInfo];
+	if (!selection) {
+		updateTimeBoundInfoContent();
+		return;
+	}
 
-
-function getTimeBoundInfo() {
-
-	timeboundinfo = [];
-
-	var sparql_query = `
+	const sparqlQuery = `
 		SELECT * WHERE {
-			?pid <http://omeka.org/s/vocabs/o#item_set> <${timeBoundInformation[selectedInfo].itemset}> ;
+			?pid <http://omeka.org/s/vocabs/o#item_set> <${selection.itemset}> ;
 				<https://schema.org/name> ?title ;
 				<https://schema.org/startDate> ?yearFrom .
 			OPTIONAL {
 				?pid <https://schema.org/endDate> ?yearUntil .
-			} 
-			OPTIONAL {
-				$pid <https://www.goudatijdmachine.nl/def#rang> ?rang
 			}
-		} 
-		#GROUP BY ?pid ?title ?yearFrom ?yearUntil ?rang 
+			OPTIONAL {
+				?pid <https://www.goudatijdmachine.nl/def#rang> ?rang
+			}
+		}
 		ORDER BY ?yearFrom ?rang
 	`;
-	console.log(sparql_query);
-	var xhr2 = new XMLHttpRequest();
-	xhr2.open("GET", sparql_endpoint + encodeURIComponent(sparql_query));
-	xhr2.setRequestHeader("Accept", "application/json");
 
-	xhr2.onreadystatechange = function () {
-		if (xhr2.readyState === 4) {
-			if (xhr2.status === 200) {
-				sparqlresult = JSON.parse(xhr2.responseText);
-				for (var prop in sparqlresult.results.bindings) {
-					var item = {
-						"pid": sparqlresult.results.bindings[prop].pid.value,
-						"title": sparqlresult.results.bindings[prop].title.value,
-						"yearFrom": sparqlresult.results.bindings[prop].yearFrom.value,
-						"yearUntil": ((typeof sparqlresult.results.bindings[prop].yearUntil !== 'undefined') ? sparqlresult.results.bindings[prop].yearUntil.value : 2022)
-					};
-					timeboundinfo.push(item);
-				}
-				updateTimeBoundInfoContent();
-			} else {
-				console.log("Call to triplestore got HTTP code " + xhr2.status);
+	try {
+		const response = await fetch(sparqlEndpoint + encodeURIComponent(sparqlQuery), {
+			headers: {
+				Accept: 'application/json'
 			}
+		});
+
+		if (!response.ok) {
+			console.log(`Call to triplestore got HTTP code ${response.status}`);
+			updateTimeBoundInfoContent();
+			return;
 		}
-	};
 
-	xhr2.send();
+		const sparqlResult = await response.json();
+		const bindings = Array.isArray(sparqlResult.results?.bindings) ? sparqlResult.results.bindings : [];
+		timeBoundInfoRecords = bindings.map((binding) => {
+			const yearFrom = Number.parseInt(binding.yearFrom.value, 10);
+			const yearUntil = binding.yearUntil ? Number.parseInt(binding.yearUntil.value, 10) : sliderOptions.max;
+			return {
+				pid: binding.pid.value,
+				title: binding.title.value,
+				yearFrom: Number.isFinite(yearFrom) ? yearFrom : sliderOptions.min,
+				yearUntil: Number.isFinite(yearUntil) ? yearUntil : sliderOptions.max
+			};
+		});
+	} catch (error) {
+		console.error(error);
+	}
 }
-
-document.getElementById('infoSelect').onchange = changeTimeBoundInfo;
-changeTimeBoundInfo();
 
 function attachCollapseTriggers() {
-	var colTriggers = document.getElementsByClassName("collapse-trigger");
-	for (var colTrig of colTriggers) {
-		colTrig.addEventListener("click", function () {
-			this.classList.toggle("active");
-		});
-	}
-}
-
-attachCollapseTriggers();
-
-
-function changeTimeBoundInfo() {
-	if (document.getElementById('infoSelect').value!="") {
-		console.log(document.getElementById('infoSelect').value);
-		selectedInfo=document.getElementById('infoSelect').value;
-		getTimeBoundInfo();
-	}
-}
-
-getTimeBoundInfo();
-
-function onEachFeature(feature, layer) {
-	var popupContent;
-	if (feature.properties) {
-		if (typeof feature.properties.pid !== "undefined") {
-			popupContent = "<a href=\"javascript:pidLink('" + feature.properties.pid + "')\">" + feature.properties.title + "</a>";
-		} else {
-			if (typeof feature.properties.id !== "undefined") {
-				popupContent = "<a target=\"_blank\" href=\"" + feature.properties.id + "\">" + feature.properties.title + "</a>";
-			} else {
-				popupContent = feature.properties.title;
-			}
-		}
-		//straten[feature.properties.title]=
-		layer.bindPopup(popupContent);
-	}
-}
-
-
-
-// not clickable....
-//plekken['straten'] = L.tileLayer.wms('https://www.goudatijdmachine.nl/geoserver/gtm/wms',{ layers:'straten',maxZoom:21,transparent:true,format:'image/png',zIndex:8});
-
-function loadGeojson() {
-	placeAndTimeBoundInformation.forEach((layer) => {
-		loadJSON(layer.geojson, function (data) {
-
-			if (typeof layer.strictperiod !== 'undefined') {
-				//plekken[layer.title].geojson=L.geoJSON(data, { filter: strictPeriodFilter, onEachFeature: onEachFeature }); 
-				plekken[layer.title] = {
-					active: 0, geojson: L.geoJSON(data, {
-						filter: strictPeriodFilter, onEachFeature: onEachFeature, pointToLayer: function (feature, latlng) { if (typeof layer.icon != 'undefined') { return L.marker(latlng, { icon: L.icon(layer.icon) }); } else { return L.marker(latlng, { icon: defaultIcon }); } }
-					})
-				}
-			} else {
-				plekken[layer.title] = {
-					active: 0, geojson: L.geoJSON(data, {
-						filter: periodFilter, onEachFeature: onEachFeature, pointToLayer: function (feature, latlng) { if (typeof layer.icon != 'undefined') { return L.marker(latlng, { icon: L.icon(layer.icon) }); } else { return L.marker(latlng, { icon: defaultIcon }); } }
-					})
-				}
-				//plekken[layer.title].geojson=L.geoJSON(data, { filter: periodFilter, onEachFeature: onEachFeature }); 
-			}
-
-
-		}, function (xhr) {
-			console.error(xhr);
+	document.querySelectorAll('.collapse-trigger').forEach((trigger) => {
+		trigger.addEventListener('click', () => {
+			trigger.classList.toggle('active');
 		});
 	});
 }
 
+function onEachFeature(feature, layer) {
+	if (!feature.properties) {
+		return;
+	}
+
+	const { pid, id, title } = feature.properties;
+	let popupContent = title;
+	if (typeof pid !== 'undefined') {
+		popupContent = '<a href="javascript:pidLink(\'' + pid + '\')">' + title + '</a>';
+	} else if (typeof id !== 'undefined') {
+		popupContent = '<a target="_blank" href="' + id + '">' + title + '</a>';
+	}
+
+	layer.bindPopup(popupContent);
+}
+
+
 function strictPeriodFilter(feature) {
-	return _periodFilter(feature, options.max + 2);
+	return periodFilterForFeature(feature, sliderOptions.max + 2);
 }
 
 function periodFilter(feature) {
-	return _periodFilter(feature, options.min);
+	return periodFilterForFeature(feature, sliderOptions.min);
 }
 
-function _periodFilter(feature, yearFrom) {
-	if (typeof feature.properties.yearFrom != 'undefined') {
-		yearFrom = feature.properties.yearFrom;
-	}
-	yearUntil = options.max;
-	if (typeof feature.properties.yearUntil != 'undefined') {
-		yearUntil = feature.properties.yearUntil;
-	}
-
-	return (yearFrom <= maxYear && minYear <= yearUntil);
+function periodFilterForFeature(feature, fallbackYearFrom) {
+	const properties = feature.properties || {};
+	const yearFrom = typeof properties.yearFrom !== 'undefined' ? Number(properties.yearFrom) : fallbackYearFrom;
+	const yearUntil = typeof properties.yearUntil !== 'undefined' ? Number(properties.yearUntil) : sliderOptions.max;
+	return yearFrom <= maxYear && minYear <= yearUntil;
 }
-
-
-updatePanels(); loadGeojson();
