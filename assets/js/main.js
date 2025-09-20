@@ -28,15 +28,37 @@ const infoSelect = document.getElementById('infoSelect');
 const timelineContainer = document.getElementById('timeBoundInfoContent');
 const placeInfoContainer = document.getElementById('placeTimeBoundInfoContent');
 const mapsContainer = document.getElementById('timeBoundMapsContent');
-const lowerLabel = document.querySelector('div[data-lower]');
-const upperLabel = document.querySelector('div[data-upper]');
+let lowerLabel;
+let upperLabel;
 const sliderMinLabel = document.getElementById('periodSliderMin');
 const sliderMaxLabel = document.getElementById('periodSliderMax');
 
 // Initialiseer de schuifregelaar en bijbehorende labels.
 rangeSlider(document.querySelector('#periodSliderLine'), sliderOptions);
-lowerLabel.textContent = String(minYear);
-upperLabel.textContent = String(maxYear);
+lowerLabel = document.querySelector('div[data-lower]');
+upperLabel = document.querySelector('div[data-upper]');
+if (lowerLabel) {
+	lowerLabel.textContent = String(minYear);
+}
+if (upperLabel) {
+	upperLabel.textContent = String(maxYear);
+}
+if (!lowerLabel || !upperLabel) {
+	requestAnimationFrame(() => {
+		if (!lowerLabel) {
+			lowerLabel = document.querySelector('div[data-lower]');
+		}
+		if (!upperLabel) {
+			upperLabel = document.querySelector('div[data-upper]');
+		}
+		if (lowerLabel) {
+			lowerLabel.textContent = String(minYear);
+		}
+		if (upperLabel) {
+			upperLabel.textContent = String(maxYear);
+		}
+	});
+}
 sliderMinLabel.textContent = String(sliderOptions.min);
 sliderMaxLabel.textContent = String(sliderOptions.max);
 
@@ -52,8 +74,16 @@ function changeRange(range) {
 	minYear = Number(range[0]);
 	maxYear = Number(range[1]);
 
-	lowerLabel.textContent = String(minYear);
-	upperLabel.textContent = String(maxYear);
+	if (!lowerLabel || !upperLabel) {
+		lowerLabel = lowerLabel || document.querySelector('div[data-lower]');
+		upperLabel = upperLabel || document.querySelector('div[data-upper]');
+	}
+	if (lowerLabel) {
+		lowerLabel.textContent = String(minYear);
+	}
+	if (upperLabel) {
+		upperLabel.textContent = String(maxYear);
+	}
 
 	updatePanels();
 }
