@@ -215,7 +215,14 @@ function updateTimeBoundInfoHeader() {
 	Object.entries(timeBoundInformation).forEach(([id, layer]) => {
 		const option = document.createElement('option');
 		option.value = id;
-		option.textContent = layer.yearFrom !== layer.yearUntil ? ${layer.title} (-) : ${layer.title} ();
+
+
+		if (layer.yearFrom != layer.yearUntil) {
+			option.textContent=layer.title+' (' + layer.yearFrom + '-' + layer.yearUntil + ')';
+		} else {
+			option.textContent=layer.title+' (' + layer.yearFrom + ')';
+		}
+		//option.textContent = layer.yearFrom !== layer.yearUntil ? ${layer.title} (-) : ${layer.title} ();
 		option.disabled = layer.yearFrom > maxYear || minYear > layer.yearUntil;
 		if (id === selectedInfo) {
 			option.selected = true;
