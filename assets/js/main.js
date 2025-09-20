@@ -125,7 +125,7 @@ async function togglePlaceLayer(layerTitle) {
 				updatePlaceTimeBoundInfoContent();
 				return;
 			}
-
+		}
 		entry.layer = createGeoJsonLayer(config, entry.data);
 		entry.layer.addTo(map);
 		entry.active = true;
