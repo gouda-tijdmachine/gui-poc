@@ -1,3 +1,4 @@
+// Hoofdmodule voor de Gouda Tijdmachine-UI; beheert kaartlagen, tijdsfilter en informatiepanelen.
 import { map, maps, loadJSON } from './geo.js';
 import { georeferencedMaps } from '../../data/georeferencedMaps.js';
 import { placeAndTimeBoundInformation } from '../../data/placeAndTimeBoundInformation.js';
@@ -7,9 +8,11 @@ const sparqlEndpoint = 'https://qlever.coret.org/gtm?query=';
 
 const defaultIcon = L.icon({ iconSize: [25, 41], iconAnchor: [12, 40], popupAnchor: [0, -26], iconUrl: 'https://www.goudatijdmachine.nl/data/files/geo/marker-icon.png', shadowUrl: 'https://www.goudatijdmachine.nl/data/files/geo/marker-shadow.png', shadowSize: [41, 41], shadowAnchor: [12, 40] });
 
+// Configuratie van de periode-schuifregelaar.
 const sliderOptions = { min: 1300, max: new Date().getFullYear(), step: 1, value: [1800, 1840], onInput: changeRange, onThumbDragEnd: endRangeSliderDrag, onRangeDragEnd: endRangeSliderDrag };
 
 let currentLayer = 'geen';
+// Voorzie snelle lookup van configuraties per laagtitel.
 const placeLayerConfigs = new Map(placeAndTimeBoundInformation.map((layer) => [layer.title, layer]));
 const placeLayers = new Map();
 let selectedInfo = 'burgemeesters';
@@ -17,8 +20,10 @@ let timeBoundInfoRecords = [];
 let minYear = sliderOptions.value[0];
 let maxYear = sliderOptions.value[1];
 
+// Cache om Leaflet-iconen niet telkens opnieuw aan te maken.
 const iconCache = new WeakMap();
 
+// Referenties naar de belangrijkste DOM-elementen.
 const infoSelect = document.getElementById('infoSelect');
 const timelineContainer = document.getElementById('timeBoundInfoContent');
 const placeInfoContainer = document.getElementById('placeTimeBoundInfoContent');
@@ -28,6 +33,7 @@ const upperLabel = document.querySelector('div[data-upper]');
 const sliderMinLabel = document.getElementById('periodSliderMin');
 const sliderMaxLabel = document.getElementById('periodSliderMax');
 
+// Initialiseer de schuifregelaar en bijbehorende labels.
 rangeSlider(document.querySelector('#periodSliderLine'), sliderOptions);
 lowerLabel.textContent = String(minYear);
 upperLabel.textContent = String(maxYear);
@@ -41,6 +47,7 @@ infoSelect.addEventListener('change', changeTimeBoundInfo);
 updatePanels();
 changeTimeBoundInfo();
 
+// Werk de geselecteerde jaren bij wanneer de schuifregelaar beweegt.
 function changeRange(range) {
 	minYear = Number(range[0]);
 	maxYear = Number(range[1]);
@@ -51,10 +58,12 @@ function changeRange(range) {
 	updatePanels();
 }
 
+// Bij het loslaten opnieuw filteren welke kaartlagen zichtbaar moeten zijn.
 function endRangeSliderDrag() {
 	updateTimeBoundMapInfo();
 }
 
+// Schakel de actieve kaartlaag om op basis van de radioknoppen.
 function showMap(newLayer) {
 	if (currentLayer !== 'geen' && maps[currentLayer]) {
 		maps[currentLayer].remove();
@@ -65,6 +74,7 @@ function showMap(newLayer) {
 	}
 }
 
+// Ververs actieve GeoJSON-lagen met de huidige periode-instellingen.
 function updateTimeBoundMapInfo() {
 	placeLayers.forEach((entry, title) => {
 		if (!entry.active || !entry.data) {
@@ -85,6 +95,7 @@ function updateTimeBoundMapInfo() {
 	});
 }
 
+// Bouw een Leaflet-GeoJSON-laag met het juiste filter en icoon.
 function createGeoJsonLayer(layerConfig, data) {
 	const filter = layerConfig.strictperiod ? strictPeriodFilter : periodFilter;
 	const icon = getIcon(layerConfig.icon);
@@ -102,6 +113,7 @@ function getLayerEntry(layerTitle) {
 	return placeLayers.get(layerTitle);
 }
 
+// Activeer of deactiveer een 'Plekken in de tijd'-laag en laad indien nodig de data.
 async function togglePlaceLayer(layerTitle) {
 	const config = placeLayerConfigs.get(layerTitle);
 	if (!config) {
@@ -135,6 +147,7 @@ async function togglePlaceLayer(layerTitle) {
 	updatePanels();
 }
 
+// Haal een herbruikbaar Leaflet-icoon op voor deze laag.
 function getIcon(iconConfig) {
 	if (!iconConfig) {
 		return defaultIcon;
@@ -145,6 +158,7 @@ function getIcon(iconConfig) {
 	return iconCache.get(iconConfig);
 }
 
+// Vul de tijdlijn met informatie-items die binnen het gekozen jaartal vallen.
 function updateTimeBoundInfoContent() {
 	const relevantRecords = timeBoundInfoRecords.filter(({ yearFrom, yearUntil }) => yearFrom <= maxYear && minYear <= yearUntil);
 
@@ -208,6 +222,7 @@ function updateTimeBoundInfoContent() {
 	timelineContainer.replaceChildren(timeline);
 }
 
+// Bouw de selectielijst voor informatiecollecties op basis van de periode.
 function updateTimeBoundInfoHeader() {
 	const fragment = document.createDocumentFragment();
 	let hasSelection = false;
@@ -240,11 +255,13 @@ function updateTimeBoundInfoHeader() {
 	infoSelect.value = selectedInfo;
 }
 
+// Toon het jaarbereik van een kaartlaag op een consistente manier.
 function formatLayerYears(layer) {
 	return layer.yearFrom !== layer.yearUntil ? `${layer.yearFrom}-${layer.yearUntil}` : `${layer.yearFrom}`;
 }
 
 
+// Actualiseer de checklist met lagen die aan- of uitgezet kunnen worden.
 function updatePlaceTimeBoundInfoContent() {
 	const fragment = document.createDocumentFragment();
 
@@ -268,6 +285,7 @@ function updatePlaceTimeBoundInfoContent() {
 }
 
 
+// Actualiseer de lijst met gegeorefereerde kaarten voor de gekozen periode.
 function updateTimeBoundMapsContent() {
 	const fragment = document.createDocumentFragment();
 
@@ -318,6 +336,7 @@ function updateTimeBoundMapsContent() {
 	mapsContainer.replaceChildren(fragment);
 }
 
+// Synchroniseer alle panelen met de huidige staat.
 function updatePanels() {
 	updateTimeBoundInfoHeader();
 	updateTimeBoundInfoContent();
@@ -325,6 +344,7 @@ function updatePanels() {
 	updateTimeBoundMapsContent();
 }
 
+// Open detailinformatie in de overlay op basis van een PID.
 function pidLink(pid) {
 	const main = document.getElementById('pidContent');
 	const iframe = document.getElementById('pidContentIframe');
@@ -344,6 +364,7 @@ function pidClose() {
 window.pidLink = pidLink;
 window.pidClose = pidClose;
 
+// Laad gegevens voor de geselecteerde informatiecategorie.
 async function changeTimeBoundInfo() {
 	if (!infoSelect.value) {
 		return;
@@ -354,6 +375,7 @@ async function changeTimeBoundInfo() {
 	updateTimeBoundInfoContent();
 }
 
+// Vraag de triplestore op en vertaal het resultaat naar bruikbare records.
 async function getTimeBoundInfo() {
 	timeBoundInfoRecords = [];
 
@@ -408,6 +430,7 @@ async function getTimeBoundInfo() {
 	}
 }
 
+// Voeg toggles toe aan de inklapbare panelen.
 function attachCollapseTriggers() {
 	document.querySelectorAll('.collapse-trigger').forEach((trigger) => {
 		trigger.addEventListener('click', () => {
@@ -416,6 +439,7 @@ function attachCollapseTriggers() {
 	});
 }
 
+// Definieer de popup-inhoud voor elke GeoJSON-feature.
 function onEachFeature(feature, layer) {
 	if (!feature.properties) {
 		return;
@@ -433,14 +457,17 @@ function onEachFeature(feature, layer) {
 }
 
 
+// Filter features die een strikt verloop hebben met een voorkomende einddatum.
 function strictPeriodFilter(feature) {
 	return periodFilterForFeature(feature, sliderOptions.max + 2);
 }
 
+// Filter features op basis van de algemene periode.
 function periodFilter(feature) {
 	return periodFilterForFeature(feature, sliderOptions.min);
 }
 
+// Controleer of een feature binnen het huidige jaartal-interval valt.
 function periodFilterForFeature(feature, fallbackYearFrom) {
 	const properties = feature.properties || {};
 	const yearFrom = typeof properties.yearFrom !== 'undefined' ? Number(properties.yearFrom) : fallbackYearFrom;

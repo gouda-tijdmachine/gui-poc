@@ -1,5 +1,7 @@
+// Hulpfuncties voor Leaflet-kaart en tegelservices van de Gouda Tijdmachine.
 const MAP_PROXY = 'https://www.goudatijdmachine.nl/data/map-proxy/?url=';
 
+// Haal JSON-data op via fetch en geef duidelijke fouten terug.
 export async function loadJSON(path) {
 	const response = await fetch(path, {
 		headers: {
@@ -23,6 +25,7 @@ export async function loadJSON(path) {
 }
 
 
+// Verzameling van beschikbare kaartlagen (WMS/tiles) per sleutel.
 export const maps = {};
 
 // Gemeente Gouda (https://gis.gouda.nl/) - CC-BY-SA
@@ -64,16 +67,21 @@ maps['mapwarper_minuutplannen_1832'] = L.tileLayer(MAP_PROXY + 'https://mapwarpe
 
 // Open Streetmap
 
+// Standaard OpenStreetMap-baselaag.
 const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 22, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' });
 
 // Mapbox Light
 
+// Mapbox Light-stijl als alternatieve baselaag.
 const box = L.tileLayer('https://api.mapbox.com/styles/v1/goudatijdmachine/clb99ht72005v14prsnhqkmzc/tiles/256/{z}/{x}/{y}@2x?access_token={token}', { maxZoom: 21, attribution: '&copy; <a href="https://www.mapbox.com/feedback/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>', id: 'mapbox/light-v10', token: 'pk.eyJ1IjoiZ291ZGF0aWpkbWFjaGluZSIsImEiOiJja3Q2N2Fqb24wZm9sMm9wZThzMW1tYzF1In0.F9nmw4f4wDkIJnsbVqmzJQ' });
 
+// Bepaal de startzoom op basis van optionele globale configuratie.
 const initialZoom = typeof window !== 'undefined' && typeof window.zoom === 'number' ? window.zoom : 16;
 
+// Instantieer de hoofdkaart van Leaflet met standaardinstellingen.
 export const map = L.map('map', { zoomSnap: 0, attributionControl: true, fullscreenControl: true, center: [52.011, 4.71], zoom: initialZoom, maxZoom: 22, layers: [box] });
 
+// Basiskaarten die in de layer control getoond worden.
 const baseMap = {
 	'Open Streetmap': osm,
 	'Mapbox Light': box
