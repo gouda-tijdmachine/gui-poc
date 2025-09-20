@@ -39,31 +39,16 @@ maps['gisgouda_luchtfoto_1977'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda
 maps['gisgouda_luchtfoto_1987'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda.nl/geoserver/RASTER/wms?', { layers: 'Lufo_1987_Binnenstad', version: '1.1.1', maxZoom: 20, transparent: true, attribution: "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>", zIndex: 5 });
 maps['gisgouda_luchtfoto_2005'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda.nl/geoserver/Luchtfoto/wms?', { layers: 'lufo_2005', version: '1.1.1', maxZoom: 20, transparent: true, attribution: "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>", zIndex: 5 });
 maps['gisgouda_luchtfoto_2010'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda.nl/geoserver/Luchtfoto/wms?', { layers: 'lufo_2010', version: '1.1.1', maxZoom: 20, transparent: true, attribution: "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>", zIndex: 5 });
-maps['gisgouda_luchtfoto_2012'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda.nl/geoserver/Luchtfoto/wms?', { layers: 'lufo_2012', version: '1.1.1', maxZoom: 20, transparent: true, attribution: "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>", zIndex: 5 });
-maps['gisgouda_luchtfoto_2014'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda.nl/geoserver/Luchtfoto/wms?', { layers: 'lufo_2014', version: '1.1.1', maxZoom: 20, transparent: true, attribution: "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>", zIndex: 5 });
 maps['gisgouda_luchtfoto_2015'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda.nl/geoserver/Luchtfoto/wms?', { layers: 'lufo_2015', version: '1.1.1', maxZoom: 20, transparent: true, attribution: "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>", zIndex: 5 });
-maps['gisgouda_luchtfoto_2016'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda.nl/geoserver/Luchtfoto/wms?', { layers: 'lufo_2016', version: '1.1.1', maxZoom: 20, transparent: true, attribution: "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>", zIndex: 5 });
-maps['gisgouda_luchtfoto_2017'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda.nl/geoserver/Luchtfoto/wms?', { layers: 'lufo_2017', version: '1.1.1', maxZoom: 20, transparent: true, attribution: "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>", zIndex: 5 });
-maps['gisgouda_luchtfoto_2018'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda.nl/geoserver/Luchtfoto/wms?', { layers: 'lufo_2018', version: '1.1.1', maxZoom: 20, transparent: true, attribution: "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>", zIndex: 5 });
-maps['gisgouda_luchtfoto_2019'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda.nl/geoserver/Luchtfoto/wms?', { layers: 'lufo_2019', version: '1.1.1', maxZoom: 20, transparent: true, attribution: "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>", zIndex: 5 });
-maps['gisgouda_luchtfoto_2020'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda.nl/geoserver/Luchtfoto/wms?', { layers: 'lufo_2020', version: '1.1.1', maxZoom: 20, transparent: true, attribution: "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>", zIndex: 5 });
 maps['gisgouda_luchtfoto_2021'] = L.tileLayer.wms(MAP_PROXY + 'https://gis.gouda.nl/geoserver/Luchtfoto/wms?', { layers: 'lufo_2021', version: '1.1.1', maxZoom: 20, transparent: true, attribution: "<a href='https://gis.gouda.nl'>Gemeente Gouda</a>", zIndex: 5 });
 
 // PDOK / Kadaster (https://app.pdok.nl/viewer/) - CC-BY
 
 maps['pdok_luchtfoto_2021'] = L.tileLayer.wms('https://service.pdok.nl/hwh/luchtfotorgb/wmts/v1_0?', { layers: '2021_orthoHR', maxZoom: 20, attribution: "<a href='https://www.pdok.nl/'>PDOK</a>", zIndex: 5 });
-maps['pdok_percelen_BRK'] = L.tileLayer.wms('https://service.pdok.nl/kadaster/cp/wms/v1_0?', { layers: 'CP.CadastralParcel', transparent: true, version: '1.3.0', format: 'image/png', attribution: "<a href='https://www.pdok.nl/'>PDOK</a>", zIndex: 5 });
-maps['pdok_gebouwen_BAG'] = L.tileLayer.wms('https://geodata.nationaalgeoregister.nl/inspire/bu/wms', { layers: 'BU.Building', transparent: true, version: '1.3.0', format: 'image/png', attribution: "<a href='https://www.pdok.nl/'>PDOK</a>", zIndex: 5 });
-
-// Universiteit Groningen (https://geo.rug.nl/portal/home/ / https://geo.rug.nl/image/rest/services/HistorischeKaarten)
-
-maps['georug_tmk_kl_1850'] = L.tileLayer.wms(MAP_PROXY + 'https://geo.rug.nl/image/services/HistorischeKaarten/TMK_Kleur/ImageServer/WMSServer?', { layers: '0', transparent: true, attribution: "<a href='https://geo.rug.nl/portal/home/'>Universiteit Groningen</a>", zIndex: 5 });
-maps['georug_tmk_gr_1850'] = L.tileLayer.wms(MAP_PROXY + 'https://geo.rug.nl/image/services/HistorischeKaarten/TMKZwartWit/ImageServer/WMSServer?', { layers: '0', transparent: true, attribution: "<a href='https://geo.rug.nl/portal/home/'>Universiteit Groningen</a>", zIndex: 5 });
-maps['georug_bonnebladen_1865'] = L.tileLayer.wms(MAP_PROXY + 'https://geo.rug.nl/image/services/HistorischeKaarten/Bonnebladen/ImageServer/WMSServer?', { layers: '0', transparent: true, attribution: "<a href='https://geo.rug.nl/portal/home/'>Universiteit Groningen</a>", zIndex: 5 });
 
 // Tileserver GTM / MapWarper
 
-maps['mapwarper_minuutplannen_1832'] = L.tileLayer(MAP_PROXY + 'https://mapwarper.net/maps/tile/62081/{z}/{x}/{y}.png', { maxZoom: 21, transparent: true, attribution: "<a href='https://www.goudatijdmachine.nl'>Gouda Tijdmachine</a>", zIndex: 5 });
+maps['mapwarper_minuutplannen_1832'] = L.tileLayer(MAP_PROXY + 'https://mapwarper.net/maps/tile/62081/{z}/{x}/{y}.png', { maxZoom: 21, transparent: true, attribution: "<a href='https://www.goudatijdmachine.nl'>Gouda Tijdmachine</a>", zIndex: 5 }); // 62081
 
 // Open Streetmap
 
