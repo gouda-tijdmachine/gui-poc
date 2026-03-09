@@ -4,7 +4,7 @@ import { georeferencedMaps } from '../../data/georeferencedMaps.js';
 import { placeAndTimeBoundInformation } from '../../data/placeAndTimeBoundInformation.js';
 import { timeBoundInformation } from '../../data/timeBoundInformation.js';
 
-const sparqlEndpoint = 'https://qlever.coret.org/gtm?query=';
+const sparqlEndpoint = 'https://sparql.goudatijdmachine.nl/?query=';
 
 const defaultIcon = L.icon({ iconSize: [25, 41], iconAnchor: [12, 40], popupAnchor: [0, -26], iconUrl: 'https://www.goudatijdmachine.nl/data/files/geo/marker-icon.png', shadowUrl: 'https://www.goudatijdmachine.nl/data/files/geo/marker-shadow.png', shadowSize: [41, 41], shadowAnchor: [12, 40] });
 
@@ -263,9 +263,9 @@ function updateTimeBoundInfoHeader() {
 
 
 		if (layer.yearFrom != layer.yearUntil) {
-			option.textContent=layer.title+' (' + layer.yearFrom + '-' + layer.yearUntil + ')';
+			option.textContent = layer.title + ' (' + layer.yearFrom + '-' + layer.yearUntil + ')';
 		} else {
-			option.textContent=layer.title+' (' + layer.yearFrom + ')';
+			option.textContent = layer.title + ' (' + layer.yearFrom + ')';
 		}
 		//option.textContent = layer.yearFrom !== layer.yearUntil ? ${layer.title} (-) : ${layer.title} ();
 		option.disabled = layer.yearFrom > maxYear || minYear > layer.yearUntil;
@@ -418,10 +418,10 @@ async function getTimeBoundInfo() {
 	const sparqlQuery = `
 		SELECT * WHERE {
 			?pid <http://omeka.org/s/vocabs/o#item_set> <${selection.itemset}> ;
-				<https://schema.org/name> ?title ;
-				<https://schema.org/startDate> ?yearFrom .
+				<http://schema.org/name> ?title ;
+				<http://schema.org/startDate> ?yearFrom .
 			OPTIONAL {
-				?pid <https://schema.org/endDate> ?yearUntil .
+				?pid <http://schema.org/endDate> ?yearUntil .
 			}
 			OPTIONAL {
 				?pid <https://www.goudatijdmachine.nl/def#rang> ?rang
