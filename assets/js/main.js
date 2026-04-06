@@ -418,10 +418,10 @@ async function getTimeBoundInfo() {
 	const sparqlQuery = `
 		SELECT * WHERE {
 			?pid <http://omeka.org/s/vocabs/o#item_set> <${selection.itemset}> ;
-				<http://schema.org/name> ?title ;
-				<http://schema.org/startDate> ?yearFrom .
+				<https://schema.org/name> ?title ;
+				<https://schema.org/startDate> ?yearFrom .
 			OPTIONAL {
-				?pid <http://schema.org/endDate> ?yearUntil .
+				?pid <https://schema.org/endDate> ?yearUntil .
 			}
 			OPTIONAL {
 				?pid <https://www.goudatijdmachine.nl/def#rang> ?rang
